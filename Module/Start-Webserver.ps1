@@ -79,7 +79,7 @@ function Start-Webserver
 	}
 
 	# MIME hash table for static content
-	$MIMEHASH = @{".avi"="video/x-msvideo"; ".crt"="application/x-x509-ca-cert"; ".css"="text/css"; ".der"="application/x-x509-ca-cert"; ".doc"="application/msword"; ".flv"="video/x-flv"; ".gif"="image/gif"; ".htm"="text/html"; ".html"="text/html"; ".ico"="image/x-icon"; ".jar"="application/java-archive"; ".jpeg"="image/jpeg"; ".jpg"="image/jpeg"; ".js"="application/javascript"; ".json"="application/json"; ".mjs"="application/javascript"; ".mov"="video/quicktime"; ".mp3"="audio/mpeg"; ".mp4"="video/mp4"; ".mpeg"="video/mpeg"; ".mpg"="video/mpeg"; ".pdf"="application/pdf"; ".pem"="application/x-x509-ca-cert"; ".pl"="application/x-perl"; ".png"="image/png"; ".rss"="application/rss+xml"; ".shtml"="text/html"; ".txt"="text/plain"; ".war"="application/java-archive"; ".wmv"="video/x-ms-wmv"; ".xml"="application/xml"; ".xsl"="application/xml"}
+	$MIMEHASH = @{".avi"="video/x-msvideo"; ".crt"="application/x-x509-ca-cert"; ".css"="text/css"; ".der"="application/x-x509-ca-cert"; ".doc"="application/msword"; ".flv"="video/x-flv"; ".gif"="image/gif"; ".htm"="text/html"; ".html"="text/html"; ".ico"="image/x-icon"; ".jar"="application/java-archive"; ".jpeg"="image/jpeg"; ".jpg"="image/jpeg"; ".js"="application/javascript"; ".json"="application/json"; ".mjs"="application/javascript"; ".mov"="video/quicktime"; ".mp3"="audio/mpeg"; ".mp4"="video/mp4"; ".mpeg"="video/mpeg"; ".mpg"="video/mpeg"; ".pdf"="application/pdf"; ".pem"="application/x-x509-ca-cert"; ".pl"="application/x-perl"; ".png"="image/png"; ".rss"="application/rss+xml"; ".shtml"="text/html"; ".txt"="text/plain"; ".war"="application/java-archive"; ".wmv"="video/x-ms-wmv"; ".xml"="application/xml"; ".xsl"="application/xml"; ".svg"="image/svg+xml"; }
 
 	# HTML answer templates for specific calls, placeholders !RESULT, !FORMFIELD, !PROMPT are allowed
 	$HTMLRESPONSECONTENTS = @{
@@ -570,6 +570,7 @@ function Start-Webserver
 
 					# create physical path based upon the base dir and url
 					$CHECKDIR = $BASEDIR.TrimEnd("/\") + $REQUEST.Url.LocalPath
+                    # $CHECKDIR = [System.Text.Encoding]::Default.GetString($REQUEST.ContentEncoding.GetBytes($CHECKDIR))
 					$CHECKFILE = ""
 					if (Test-Path $CHECKDIR -PathType Container)
 					{ # physical path is a directory
@@ -632,8 +633,10 @@ function Start-Webserver
 							{ # no, serve as binary download
 								$RESPONSE.ContentType = "application/octet-stream"
 								$FILENAME = Split-Path -Leaf $CHECKFILE
+                                $FILENAME = [System.Text.Encoding]::UTF8.GetString([System.Text.Encoding]::Default.GetBytes($FILENAME))
 								$RESPONSE.AddHeader("Content-Disposition", "attachment; filename=$FILENAME")
 							}
+                            $RESPONSE.ContentEncoding = [System.Text.Encoding]::UTF8;
 							$RESPONSE.AddHeader("Last-Modified", [IO.File]::GetLastWriteTime($CHECKFILE).ToString('r'))
 							$RESPONSE.AddHeader("Server", "Powershell Webserver/1.2 on ")
 							$RESPONSE.OutputStream.Write($BUFFER, 0, $BUFFER.Length)
